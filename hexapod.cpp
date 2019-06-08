@@ -8,7 +8,8 @@
 #include <map_elites/binary_map.hpp>
 #include <mean_archive.hpp>
 
-#include <hexapod_dart/hexapod_dart_simu.hpp>
+// TODO
+#include <rhex_dart/rhex_dart_simu.hpp>
 
 using namespace limbo;
 
@@ -63,7 +64,8 @@ struct Params {
 Params::archiveparams::archive_t load_archive(std::string archive_name);
 
 namespace global {
-    std::shared_ptr<hexapod_dart::Hexapod> global_robot;
+// TODO
+    std::shared_ptr<rhex_dart::Rhex> global_robot;
     std::vector<int> brokenLegs;
 } // namespace global
 
@@ -78,7 +80,8 @@ struct Eval {
         Eigen::VectorXd::Map(key.data(), key.size()) = x;
 
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
-        hexapod_dart::HexapodDARTSimu<> simu(ctrl, global::global_robot->clone());
+        // TODO
+ 	rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
         simu.run(5);
 
         return tools::make_vector(simu.covered_distance());
@@ -87,7 +90,8 @@ struct Eval {
 
 void lecture(const std::vector<double>& ctrl)
 {
-    hexapod_dart::HexapodDARTSimu<> simu(ctrl, global::global_robot->clone());
+// TODO
+    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
     simu.run(5);
 
     std::cout << "Covered distance: " << simu.covered_distance() << std::endl;
@@ -95,10 +99,11 @@ void lecture(const std::vector<double>& ctrl)
 
 void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vector<int>())
 {
-    std::vector<hexapod_dart::HexapodDamage> damages(broken_legs.size());
+// TODO
+    std::vector<rhex_dart::RhexDamage> damages(broken_legs.size());
     for (size_t i = 0; i < broken_legs.size(); ++i)
-        damages.push_back(hexapod_dart::HexapodDamage("leg_removal", std::to_string(broken_legs[i])));
-    global::global_robot = std::make_shared<hexapod_dart::Hexapod>(robot_file, damages);
+        damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
+    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, damages);
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -175,7 +180,7 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
                     if (i >= 7)
                         elem.controller.push_back(data);
                 }
-                if (elem.controller.size() == 36) {
+                if (elem.controller.size() == 48) {
                     archive[candidate] = elem;
                 }
             }
@@ -219,18 +224,18 @@ int main(int argc, char** argv)
         }
     }
     global::brokenLegs = brokenleg;
-
-    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/hexapod_models/URDF/pexod.urdf", global::brokenLegs);
+// TODO
+    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/Rhex_models/URDF/pexod.urdf", global::brokenLegs);
 
     if (ctrl_it != cmd_args.end()) {
-        std::vector<std::string>::iterator end_it = ctrl_it + 37;
+        std::vector<std::string>::iterator end_it = ctrl_it + 49;
 
         std::vector<double> ctrl;
         for (std::vector<std::string>::iterator ii = ctrl_it + 1; ii != end_it; ii++) {
             ctrl.push_back(atof((*ii).c_str()));
-        }
-        if (ctrl.size() != 36) {
-            std::cerr << "You have to provide 36 controller parameters!" << std::endl;
+        } // TODO 
+        if (ctrl.size() != 48) {
+            std::cerr << "You have to provide 48 controller parameters!" << std::endl;
             if (global::global_robot)
                 global::global_robot.reset();
             return -1;

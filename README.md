@@ -1,28 +1,12 @@
-# IT&E Hexapod Experiments
+# IT&E Rhex Experiments
 
-*Limbo experiment*: IT&E code for developing hexapod experiments similar to [Cully et al. (2015), Nature](https://github.com/resibots/cully_2015_nature). This code is not replicating the exact experiments of the Nature paper, but can be seen as a more modern implementation of the underlying algorithm.
-
-### Citing this code
-
-If you use our code for a scientific paper, please cite:
-
-Antoine Cully, Jeff Clune, Danesh Tarapore, and Jean-Baptiste Mouret. **"Robots that can adapt like animals."** *Nature 521, no. 7553 (2015): 503-507*.
-
-In BibTex:
-  
-    @article{cully_robots_2015,
-        title = {Robots that can adapt like animals},
-        volume = {521},
-        pages = {503--507},
-        number = {7553},
-        journal = {Nature},
-        author = {Cully, Antoine and Clune, Jeff and Tarapore, Danesh and Mouret, Jean-Baptiste},
-        year = {2015}
-    }
+*Limbo experiment*: IT&E code for developing rhex experiments similar to [Cully et al. (2015), Nature](https://github.com/resibots/cully_2015_nature).
 
 ## Authors
 - Author/Maintainer: Konstantinos Chatzilygeroudis
 - Other contributors: Vassilis Vassiliades, Antoine Cully, Jean-Baptiste Mouret
+- Original Rhex controllers and models: Roman Buckley
+- Rhex ITE implentation: Aran Smith
 
 ## How to compile
 
@@ -40,7 +24,7 @@ From now on, we assume that the `RESIBOTS_DIR` variable is set.
 
 #### Installing DART
 
-To simulate our hexapod we are using the [DART] simulator. To install use the following procedure:
+To simulate our rhex we are using the [DART] simulator. To install use the following procedure:
 
 ```bash
 sudo apt-add-repository ppa:libccd-debs/ppa
@@ -67,17 +51,17 @@ make -j4
 sudo make install
 ```
 
-#### Installing the hexapod common files
+#### Installing the rhex common files
 
-In order to simulate the hexapod you nead to get the URDF file and the controller library:
+In order to simulate the rhex you nead to get the URDF file and the controller library:
 
 ```bash
 cd /path/to/tmp/folder
-git clone https://github.com/resibots/hexapod_common.git
-cd hexapod_common/hexapod_models
+git clone https://github.com/rb10g16/rhex_common.git
+cd rhex_common/rhex_models
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf install
-cd ../hexapod_controller
+cd ../rhex_controller
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf
 ./waf install
@@ -85,12 +69,12 @@ cd ../hexapod_controller
 
 #### Installing the DART wrapper
 
-To facilitate the simulation we have created a simple wrapper over the DART simulator that is specific to our hexapod robot:
+To facilitate the simulation we have created a simple wrapper over the DART simulator that is specific to our rhex robot:
 
 ```bash
 cd /path/to/tmp/folder
-git clone https://github.com/resibots/hexapod_simu.git
-cd hexapod_simu/hexapod_dart
+git clone https://github.com/rb10g16/rhex_simu.git
+cd rhex_simu/rhex_dart
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf
 ./waf install
@@ -109,19 +93,19 @@ sudo apt-get install libtbb-dev
 - Get [limbo]: `git clone https://github.com/resibots/limbo.git`
 - Go to your `limbo` root directory
 - Create an experiment folder (if there's none) and cd to it: `mkdir exp && cd exp`
-- Clone ite_v2: `git clone https://github.com/resibots/ite_v2.git`
+- Clone rhex-ite: `git clone https://github.com/AranBSmith/rhex-ite.git`
 - Go back to your `limbo` root directory
-- Configure the experiment: `./waf configure --exp ite_v2`
-- Compile the experiment: `./waf --exp ite_v2`
+- Configure the experiment: `./waf configure --exp rhex-ite`
+- Compile the experiment: `./waf --exp rhex-ite`
 
 ## How to run
 
 - Compile the experiment (as shown above)
 - Run it (assuming you are on limbo root dir and the `RESIBOTS_DIR` folder is set properly):
-    - `./build/exp/ite_v2/hexapod_simu path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]`
-    - `./build/exp/ite_v2/hexapod_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
+    - `./build/exp/ite_v2/rhex_simu path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]`
+    - `./build/exp/ite_v2/rhex_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
     - the ids of the legs are zero-based; i.e., they span from 0 to 5
-- Some **already generated archives** (to save you time) are in the `archives` folder. You can use [map_elites_hexapod_v2](https://github.com/resibots/map_elites_hexapod_v2) to generate new ones.
+- Some **already generated archives** (to save you time) are in the `archives` folder. You can use [MAP-Elites-Rhex](https://github.com/AranBSmith/MAP-Elites-Rhex) to generate new ones.
 
 ## Funding
 
