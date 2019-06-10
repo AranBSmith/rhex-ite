@@ -57,7 +57,7 @@ In order to simulate the rhex you nead to get the URDF file and the controller l
 
 ```bash
 cd /path/to/tmp/folder
-git clone https://github.com/rb10g16/rhex_common.git
+git clone https://github.com/AranBSmith/rhex_common.git
 cd rhex_common/rhex_models
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf install
@@ -73,7 +73,7 @@ To facilitate the simulation we have created a simple wrapper over the DART simu
 
 ```bash
 cd /path/to/tmp/folder
-git clone https://github.com/rb10g16/rhex_simu.git
+git clone https://github.com/AranBSmith/rhex_simu.git
 cd rhex_simu/rhex_dart
 ./waf configure --prefix=$RESIBOTS_DIR
 ./waf
