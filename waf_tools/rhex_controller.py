@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 # encoding: utf-8
 # Konstantinos Chatzilygeroudis - 2015
+# Aran Smith - 2019
 
 """
-Quick n dirty hexapod_controller detection
+Quick n dirty rhex_controller detection
 """
 
 import os
@@ -11,10 +12,10 @@ from waflib.Configure import conf
 
 
 def options(opt):
-    opt.add_option('--controller', type='string', help='path to hexapod_controller', dest='controller')
+    opt.add_option('--controller', type='string', help='path to rhex_controller', dest='controller')
 
 @conf
-def check_hexapod_controller(conf):
+def check_rhex_controller(conf):
     includes_check = ['/usr/local/include', '/usr/include']
 
     if 'RESIBOTS_DIR' in os.environ:
@@ -24,10 +25,10 @@ def check_hexapod_controller(conf):
         includes_check = [conf.options.controller + '/include']
 
     try:
-        conf.start_msg('Checking for hexapod_controller includes')
-        res = conf.find_file('hexapod_controller/hexapod_controller_simple.hpp', includes_check)
+        conf.start_msg('Checking for rhex_controller includes')
+        res = conf.find_file('rhex_controller/rhex_controller_simple.hpp', includes_check)
         conf.end_msg('ok')
-        conf.env.INCLUDES_HEXAPOD_CONTROLLER = includes_check
+        conf.env.INCLUDES_RHEX_CONTROLLER = includes_check
     except:
         conf.end_msg('Not found', 'RED')
         return

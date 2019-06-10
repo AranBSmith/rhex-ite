@@ -81,7 +81,7 @@ struct Eval {
 
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
         // TODO
- 	rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
+		rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
         simu.run(5);
 
         return tools::make_vector(simu.covered_distance());
@@ -103,7 +103,10 @@ void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vecto
     std::vector<rhex_dart::RhexDamage> damages(broken_legs.size());
     for (size_t i = 0; i < broken_legs.size(); ++i)
         damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
-    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, damages);
+    // global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, damages);
+	std::cout<< "1" << std::endl;
+	global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, damages);
+	std::cout<< "2" << std::endl;
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -225,7 +228,8 @@ int main(int argc, char** argv)
     }
     global::brokenLegs = brokenleg;
 // TODO
-    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/Rhex_models/URDF/pexod.urdf", global::brokenLegs);
+    // init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/Rhex_models/URDF/pexod.urdf", global::brokenLegs);
+	init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/hexapod_models/URDF/RHex8.skel", global::brokenLegs);
 
     if (ctrl_it != cmd_args.end()) {
         std::vector<std::string>::iterator end_it = ctrl_it + 49;
