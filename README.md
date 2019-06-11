@@ -102,8 +102,8 @@ sudo apt-get install libtbb-dev
 
 - Compile the experiment (as shown above)
 - Run it (assuming you are on limbo root dir and the `RESIBOTS_DIR` folder is set properly):
-    - `./build/exp/ite_v2/rhex_simu path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]`
-    - `./build/exp/ite_v2/rhex_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
+    - `./build/exp/rhex-ite/rhex_simu path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]`
+    - `./build/exp/rhex-ite/rhex_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
     - the ids of the legs are zero-based; i.e., they span from 0 to 5
 - Some **already generated archives** (to save you time) are in the `archives` folder. You can use [MAP-Elites-Rhex](https://github.com/AranBSmith/MAP-Elites-Rhex) to generate new ones.
 

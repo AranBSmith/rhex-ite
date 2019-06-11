@@ -76,12 +76,9 @@ struct Eval {
     {
         std::vector<double> key(x.size(), 0);
         Eigen::VectorXd::Map(key.data(), key.size()) = x;
-
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
-
-		rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
+	rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
         simu.run(5);
-
         return tools::make_vector(simu.covered_distance());
     }
 };
@@ -102,12 +99,8 @@ void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vecto
     for (size_t i = 0; i < broken_legs.size(); ++i)
         damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
 
-	// global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, damages);
-	std::cout<< "1" << std::endl;
-
-	damages = {};
 	global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, damages);
-	std::cout<< "2" << std::endl;
+
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -244,6 +237,7 @@ int main(int argc, char** argv)
                 global::global_robot.reset();
             return -1;
         }
+
         lecture(ctrl);
 
         if (global::global_robot)
@@ -264,22 +258,22 @@ int main(int argc, char** argv)
     if (n_it != cmd_args.end()) {
         Params::stop_maxiterations::set_iterations(atoi((n_it + 1)->c_str()));
     }
+
     else
         Params::stop_maxiterations::set_iterations(10);
+
 
     typedef kernel::MaternFiveHalves<Params> Kernel_t;
     typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
     typedef boost::fusion::vector<stop::MaxIterations<Params>> Stop_t;
     typedef mean::MeanArchive<Params> Mean_t;
     typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>, stat::ConsoleSummary<Params>> Stat_t;
-
     typedef init::NoInit<Params> Init_t;
     typedef model::GP<Params, Kernel_t, Mean_t> GP_t;
     typedef acqui::UCB<Params, GP_t> Acqui_t;
 
     bayes_opt::BOptimizer<Params, modelfun<GP_t>, initfun<Init_t>, acquifun<Acqui_t>, acquiopt<InnerOpt_t>, statsfun<Stat_t>, stopcrit<Stop_t>> opt;
     opt.optimize(Eval());
-
     auto val = opt.best_observation();
     Eigen::VectorXd result = opt.best_sample().transpose();
 
