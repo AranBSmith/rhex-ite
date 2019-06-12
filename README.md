@@ -3,10 +3,9 @@
 *Limbo experiment*: IT&E code for developing rhex experiments similar to [Cully et al. (2015), Nature](https://github.com/resibots/cully_2015_nature).
 
 ## Authors
-- Author/Maintainer: Konstantinos Chatzilygeroudis
-- Other contributors: Vassilis Vassiliades, Antoine Cully, Jean-Baptiste Mouret
+- Other contributors: Vassilis Vassiliades, Antoine Cully, Jean-Baptiste Mouret, Konstantinos Chatzilygeroudis
 - Original Rhex controllers and models: Roman Buckley
-- Rhex ITE implentation: Aran Smith
+- Rhex ITE implentation : Aran Smith
 
 ## How to compile
 
@@ -106,10 +105,6 @@ sudo apt-get install libtbb-dev
     - `./build/exp/rhex-ite/rhex_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
     - the ids of the legs are zero-based; i.e., they span from 0 to 5
 - Some **already generated archives** (to save you time) are in the `archives` folder. You can use [MAP-Elites-Rhex](https://github.com/AranBSmith/MAP-Elites-Rhex) to generate new ones.
-
-## Funding
-
-This work has been funded by the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (grant agreement number 637972 - ResiBots).
 
 ## LICENSE
 
