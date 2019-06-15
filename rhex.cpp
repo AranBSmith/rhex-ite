@@ -65,6 +65,7 @@ Params::archiveparams::archive_t load_archive(std::string archive_name);
 namespace global {
     std::shared_ptr<rhex_dart::Rhex> global_robot;
     std::vector<int> brokenLegs;
+    std::vector<int> damageType;
 } // namespace global
 
 struct Eval {
@@ -77,7 +78,7 @@ struct Eval {
         std::vector<double> key(x.size(), 0);
         Eigen::VectorXd::Map(key.data(), key.size()) = x;
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
-	rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
+        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
         simu.run(5);
         return tools::make_vector(simu.covered_distance());
     }
@@ -96,11 +97,28 @@ void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vecto
 {
 
     std::vector<rhex_dart::RhexDamage> damages(broken_legs.size());
-    for (size_t i = 0; i < broken_legs.size(); ++i)
-        damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
+    for (size_t i = 0; i < broken_legs.size(); ++i) {
+        switch(global::damageType[i]) {
+            case 0:
+                std::cout << "leg_removal" << std::endl;
+                damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
+                break;
+            case 1:
+                std::cout << "leg_shortening" << std::endl;
+                damages.push_back(rhex_dart::RhexDamage("leg_shortening", std::to_string(broken_legs[i])));
+                break;
+            case 2:
+                std::cout << "blocked_joint" << std::endl;
+                damages.push_back(rhex_dart::RhexDamage("blocked_joint", std::to_string(broken_legs[i])));
+                break;
+            case 3:
+                std::cout << "free_joint" << std::endl;
+                damages.push_back(rhex_dart::RhexDamage("free_joint", std::to_string(broken_legs[i])));
+                break;
+        }
+    }
 
 	global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, damages);
-
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -204,8 +222,11 @@ int main(int argc, char** argv)
     std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l");
     std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c");
     std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n");
+    std::vector<std::string>::iterator dt_it = std::find(cmd_args.begin(), cmd_args.end(), "-d");
 
     std::vector<int> brokenleg;
+    std::vector<int> damagetype;
+
     if (legs_it != cmd_args.end()) {
         std::vector<std::string>::iterator end_it = (legs_it < ctrl_it) ? ctrl_it : cmd_args.end();
         end_it = (end_it < n_it || n_it < legs_it) ? end_it : n_it;
@@ -213,6 +234,13 @@ int main(int argc, char** argv)
         for (std::vector<std::string>::iterator ii = legs_it + 1; ii != end_it; ii++) {
             brokenleg.push_back(atoi((*ii).c_str()));
         }
+
+        end_it = cmd_args.end();
+
+        for (std::vector<std::string>::iterator ii = dt_it + 1; ii != end_it; ii++) {
+            damagetype.push_back(atoi((*ii).c_str()));
+        }
+
         if (brokenleg.size() >= 6) {
             std::cerr << "The robot should at least have one leg!" << std::endl;
             if (global::global_robot)
@@ -220,7 +248,9 @@ int main(int argc, char** argv)
             return -1;
         }
     }
+
     global::brokenLegs = brokenleg;
+    global::damageType = damagetype;
 
 	init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/URDF/RHex8.skel", global::brokenLegs);
 
