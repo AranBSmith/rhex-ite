@@ -215,6 +215,7 @@ BO_DECLARE_DYN_PARAM(int, Params::stop_maxiterations, iterations);
 
 int main(int argc, char** argv)
 {
+    std::cout << "hello";
     std::vector<std::string> cmd_args;
     for (int i = 0; i < argc; i++)
         cmd_args.push_back(std::string(argv[i]));
@@ -252,7 +253,9 @@ int main(int argc, char** argv)
     global::brokenLegs = brokenleg;
     global::damageType = damagetype;
 
-	init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/URDF/RHex8.skel", global::brokenLegs);
+    std::cout << "loading model" << std::endl;
+    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/RHex8.skel", global::brokenLegs);
+    std::cout << "loaded model" << std::endl;
 
     if (ctrl_it != cmd_args.end()) {
         std::vector<std::string>::iterator end_it = ctrl_it + 49;
@@ -283,7 +286,9 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    std::cout << "loading archive" << std::endl;
     Params::archiveparams::archive = load_archive(argv[1]);
+    std::cout << "loaded archive" << std::endl;
 
     if (n_it != cmd_args.end()) {
         Params::stop_maxiterations::set_iterations(atoi((n_it + 1)->c_str()));
