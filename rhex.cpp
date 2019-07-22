@@ -11,7 +11,7 @@
 #include <rhex_dart/rhex_dart_simu.hpp>
 
 using namespace limbo;
-
+//
 struct Params {
     struct bayes_opt_boptimizer : public defaults::bayes_opt_boptimizer {
     };
@@ -66,6 +66,7 @@ namespace global {
     std::shared_ptr<rhex_dart::Rhex> global_robot;
     std::vector<int> brokenLegs;
     std::vector<int> damageType;
+    std::vector<rhex_dart::RhexDamage> damages;
 } // namespace global
 
 struct Eval {
@@ -78,7 +79,13 @@ struct Eval {
         std::vector<double> key(x.size(), 0);
         Eigen::VectorXd::Map(key.data(), key.size()) = x;
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
-        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
+        std::cout << "Using control parameters: ";
+        for(size_t i = 0; i < ctrl.size(); ++i)
+        {
+            std::cout << ctrl[i] << " ";
+        }
+        std::cout << std::endl;
+        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), 1.0, global::damages);
         simu.run(5);
         return tools::make_vector(simu.covered_distance());
     }
@@ -87,7 +94,7 @@ struct Eval {
 void lecture(const std::vector<double>& ctrl)
 {
 
-    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone());
+    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), 1.0, global::damages);
     simu.run(5);
 
     std::cout << "Covered distance: " << simu.covered_distance() << std::endl;
@@ -96,29 +103,27 @@ void lecture(const std::vector<double>& ctrl)
 void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vector<int>())
 {
 
-    std::vector<rhex_dart::RhexDamage> damages(broken_legs.size());
     for (size_t i = 0; i < broken_legs.size(); ++i) {
         switch(global::damageType[i]) {
             case 0:
                 std::cout << "leg_removal" << std::endl;
-                damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
+                global::damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
                 break;
             case 1:
                 std::cout << "leg_shortening" << std::endl;
-                damages.push_back(rhex_dart::RhexDamage("leg_shortening", std::to_string(broken_legs[i])));
+                global::damages.push_back(rhex_dart::RhexDamage("leg_shortening", std::to_string(broken_legs[i])));
                 break;
             case 2:
                 std::cout << "blocked_joint" << std::endl;
-                damages.push_back(rhex_dart::RhexDamage("blocked_joint", std::to_string(broken_legs[i])));
+                global::damages.push_back(rhex_dart::RhexDamage("blocked_joint", std::to_string(broken_legs[i])));
                 break;
             case 3:
                 std::cout << "free_joint" << std::endl;
-                damages.push_back(rhex_dart::RhexDamage("free_joint", std::to_string(broken_legs[i])));
+                global::damages.push_back(rhex_dart::RhexDamage("free_joint", std::to_string(broken_legs[i])));
                 break;
         }
     }
-
-	global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, damages);
+    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damages);
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -174,16 +179,18 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
                     numbers.push_back(num);
                 }
 
-                if (numbers.size() < 43)
+                if (numbers.size() < 30)
                     continue;
 
                 int init_i = 0;
-                if (numbers.size() > 43)
+                if (numbers.size() > 30)
                     init_i = 1;
-
+                //
+                // std::cout << "init: " << init_i << std::endl;
                 Params::archiveparams::elem_archive elem;
                 std::vector<double> candidate(6);
-                for (int i = 0; i < 43; i++) {
+
+                for (int i = 0; i < 30; i++) {
                     double data = numbers[init_i + i];
                     if (i <= 5) {
                         candidate[i] = data;
@@ -195,7 +202,7 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
                     if (i >= 7)
                         elem.controller.push_back(data);
                 }
-                if (elem.controller.size() == 48) {
+                if (elem.controller.size() == 23) {
                     archive[candidate] = elem;
                 }
             }
@@ -215,7 +222,6 @@ BO_DECLARE_DYN_PARAM(int, Params::stop_maxiterations, iterations);
 
 int main(int argc, char** argv)
 {
-    std::cout << "hello";
     std::vector<std::string> cmd_args;
     for (int i = 0; i < argc; i++)
         cmd_args.push_back(std::string(argv[i]));
@@ -254,18 +260,18 @@ int main(int argc, char** argv)
     global::damageType = damagetype;
 
     std::cout << "loading model" << std::endl;
-    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/RHex8.skel", global::brokenLegs);
+    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel", global::brokenLegs);
     std::cout << "loaded model" << std::endl;
 
     if (ctrl_it != cmd_args.end()) {
-        std::vector<std::string>::iterator end_it = ctrl_it + 49;
+        std::vector<std::string>::iterator end_it = ctrl_it + 31;
 
         std::vector<double> ctrl;
         for (std::vector<std::string>::iterator ii = ctrl_it + 1; ii != end_it; ii++) {
             ctrl.push_back(atof((*ii).c_str()));
         } 
-        if (ctrl.size() != 48) {
-            std::cerr << "You have to provide 48 controller parameters!" << std::endl;
+        if (ctrl.size() != 23) {
+            std::cerr << "You have to provide 23 controller parameters!" << std::endl;
             if (global::global_robot)
                 global::global_robot.reset();
             return -1;
