@@ -63,6 +63,7 @@ struct Params {
 Params::archiveparams::archive_t load_archive(std::string archive_name);
 
 namespace global {
+    int _world_option;
     std::shared_ptr<rhex_dart::Rhex> global_robot;
     std::vector<int> brokenLegs;
     std::vector<int> damageType;
@@ -85,7 +86,7 @@ struct Eval {
             std::cout << ctrl[i] << " ";
         }
         std::cout << std::endl;
-        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), 1.0, global::damages);
+        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, 1.0, global::damages);
         simu.run(5);
         return tools::make_vector(simu.covered_distance());
     }
@@ -94,7 +95,8 @@ struct Eval {
 void lecture(const std::vector<double>& ctrl)
 {
 
-    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), 1.0, global::damages);
+    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, 1.0, global::damages);
+
     simu.run(5);
 
     std::cout << "Covered distance: " << simu.covered_distance() << std::endl;
@@ -105,6 +107,10 @@ void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vecto
 
     for (size_t i = 0; i < broken_legs.size(); ++i) {
         switch(global::damageType[i]) {
+            case -1:
+                std::cout << "no_damage" << std::endl;
+                global::damages.push_back(rhex_dart::RhexDamage("no_damage", std::to_string(broken_legs[i])));
+                break;
             case 0:
                 std::cout << "leg_removal" << std::endl;
                 global::damages.push_back(rhex_dart::RhexDamage("leg_removal", std::to_string(broken_legs[i])));
@@ -123,7 +129,23 @@ void init_simu(std::string robot_file, std::vector<int> broken_legs = std::vecto
                 break;
         }
     }
-    global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damages);
+
+//    std::cout << "damages: ";
+//    for (size_t i = 0; i < global::damages.size(); i++){
+//        std::cout << global::damages[i].type << " ";
+//        std::cout << global::damages[i].data << " ";
+//    }
+
+//    std::cout<<std::endl;
+//    std::cout << "size: " << global::damages.size() << std::endl;
+
+    if(global::damages.size() == 0){
+        global::damages = {};
+        global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damages);
+    }
+    else {
+        global::global_robot = std::make_shared<rhex_dart::Rhex>(robot_file, "Rhex", false, global::damages);
+    }
 }
 
 std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archiveparams::classcomp> load_archive(std::string archive_name)
@@ -185,8 +207,7 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
                 int init_i = 0;
                 if (numbers.size() > 30)
                     init_i = 1;
-                //
-                // std::cout << "init: " << init_i << std::endl;
+
                 Params::archiveparams::elem_archive elem;
                 std::vector<double> candidate(6);
 
@@ -225,7 +246,9 @@ int main(int argc, char** argv)
     std::vector<std::string> cmd_args;
     for (int i = 0; i < argc; i++)
         cmd_args.push_back(std::string(argv[i]));
+// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/2307/rhex_text_2019-07-19_15_22_31_12850/archive_2850.dat -w 2 -l 1 -d 0
 
+    std::vector<std::string>::iterator w_it = std::find(cmd_args.begin(), cmd_args.end(), "-w");
     std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l");
     std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c");
     std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n");
@@ -235,8 +258,10 @@ int main(int argc, char** argv)
     std::vector<int> damagetype;
 
     if (legs_it != cmd_args.end()) {
-        std::vector<std::string>::iterator end_it = (legs_it < ctrl_it) ? ctrl_it : cmd_args.end();
-        end_it = (end_it < n_it || n_it < legs_it) ? end_it : n_it;
+//        std::vector<std::string>::iterator end_it = (legs_it < ctrl_it) ? ctrl_it : cmd_args.end();
+//        end_it = (end_it < n_it || n_it < legs_it) ? end_it : n_it;
+
+        std::vector<std::string>::iterator end_it = dt_it;
 
         for (std::vector<std::string>::iterator ii = legs_it + 1; ii != end_it; ii++) {
             brokenleg.push_back(atoi((*ii).c_str()));
@@ -258,6 +283,17 @@ int main(int argc, char** argv)
 
     global::brokenLegs = brokenleg;
     global::damageType = damagetype;
+
+//    std::cout << "broken legs: ";
+//    for (size_t i = 0; i < global::brokenLegs.size(); i++)
+//        std::cout << global::brokenLegs[i] << " ";
+//    std::cout<<std::endl;
+
+//    std::cout << "damage type: ";
+//    for (size_t i = 0; i < global::damageType.size(); i++){
+//        std::cout << global::damageType[i] << " ";
+//    }
+//    std::cout<<std::endl;
 
     std::cout << "loading model" << std::endl;
     init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel", global::brokenLegs);
@@ -296,19 +332,23 @@ int main(int argc, char** argv)
     Params::archiveparams::archive = load_archive(argv[1]);
     std::cout << "loaded archive" << std::endl;
 
-    if (n_it != cmd_args.end()) {
+    if (n_it != cmd_args.end())
         Params::stop_maxiterations::set_iterations(atoi((n_it + 1)->c_str()));
-    }
-
     else
         Params::stop_maxiterations::set_iterations(10);
 
+    if (w_it != cmd_args.end())
+        global::_world_option = atoi((w_it + 1)->c_str());
+    else
+        global::_world_option = 0;
 
     typedef kernel::MaternFiveHalves<Params> Kernel_t;
     typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
     typedef boost::fusion::vector<stop::MaxIterations<Params>> Stop_t;
     typedef mean::MeanArchive<Params> Mean_t;
-    typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>, stat::ConsoleSummary<Params>> Stat_t;
+    typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
+            stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
+            stat::Observations<Params>, stat::BestSamples<Params>> Stat_t;
     typedef init::NoInit<Params> Init_t;
     typedef model::GP<Params, Kernel_t, Mean_t> GP_t;
     typedef acqui::UCB<Params, GP_t> Acqui_t;
