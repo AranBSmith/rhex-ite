@@ -48,11 +48,11 @@ struct Params {
         struct classcomp {
             bool operator()(const std::vector<double>& lhs, const std::vector<double>& rhs) const
             {
-                assert(lhs.size() == 6 && rhs.size() == 6);
+                assert(lhs.size() == 5 && rhs.size() == 5);
                 int i = 0;
-                while (i < 5 && std::round(lhs[i] * 4) == std::round(rhs[i] * 4)) //lhs[i]==rhs[i])
+                while (i < 4 && std::round(lhs[i] * 3) == std::round(rhs[i] * 3)) //lhs[i]==rhs[i])
                     i++;
-                return std::round(lhs[i] * 4) < std::round(rhs[i] * 4); //lhs[i]<rhs[i];
+                return std::round(lhs[i] * 3) < std::round(rhs[i] * 3); //lhs[i]<rhs[i];
             }
         };
         typedef std::map<std::vector<double>, elem_archive, classcomp> archive_t;
@@ -71,7 +71,7 @@ namespace global {
 } // namespace global
 
 struct Eval {
-    BO_PARAM(size_t, dim_in, 6);
+    BO_PARAM(size_t, dim_in, 5);
     BO_PARAM(size_t, dim_out, 1);
 
     // the function to be optimized
@@ -162,14 +162,14 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
             binary_map::BinaryMap m = binary_map::load(archive_name);
             std::vector<binary_map::Elem> v = m.elems;
             std::vector<float> dims = m.dims;
-            assert(dims.size() == 6);
+            assert(dims.size() == 5);
 
             for (size_t i = 0; i < v.size(); i++) {
                 Params::archiveparams::elem_archive elem;
 
                 std::vector<int> pos = v[i].pos;
 
-                std::vector<double> candidate(6);
+                std::vector<double> candidate(5);
                 for (size_t j = 0; j < dims.size(); j++) {
                     candidate[j] = pos[j] / double(dims[j]);
                 }
@@ -201,26 +201,26 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
                     numbers.push_back(num);
                 }
 
-                if (numbers.size() < 30)
+                if (numbers.size() < 29)
                     continue;
 
                 int init_i = 0;
-                if (numbers.size() > 30)
+                if (numbers.size() > 29)
                     init_i = 1;
 
                 Params::archiveparams::elem_archive elem;
-                std::vector<double> candidate(6);
+                std::vector<double> candidate(5);
 
-                for (int i = 0; i < 30; i++) {
+                for (int i = 0; i < 29; i++) {
                     double data = numbers[init_i + i];
-                    if (i <= 5) {
+                    if (i <= 4) {
                         candidate[i] = data;
                         elem.duty_cycle.push_back(data);
                     }
-                    if (i == 6) {
+                    if (i == 5) {
                         elem.fit = data;
                     }
-                    if (i >= 7)
+                    if (i >= 6)
                         elem.controller.push_back(data);
                 }
                 if (elem.controller.size() == 23) {
