@@ -64,6 +64,8 @@ Params::archiveparams::archive_t load_archive(std::string archive_name);
 
 namespace global {
     int _world_option;
+    int _model_option;
+    double _friction;
     std::shared_ptr<rhex_dart::Rhex> global_robot;
     std::vector<int> brokenLegs;
     std::vector<int> damageType;
@@ -86,7 +88,7 @@ struct Eval {
             std::cout << ctrl[i] << " ";
         }
         std::cout << std::endl;
-        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, 1.0, global::damages);
+        rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, global::_friction, global::damages);
         simu.run(5);
         return tools::make_vector(simu.covered_distance());
     }
@@ -95,7 +97,7 @@ struct Eval {
 void lecture(const std::vector<double>& ctrl)
 {
 
-    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, 1.0, global::damages);
+    rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, global::_friction, global::damages);
 
     simu.run(5);
 
@@ -241,25 +243,25 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
 Params::archiveparams::archive_t Params::archiveparams::archive;
 BO_DECLARE_DYN_PARAM(int, Params::stop_maxiterations, iterations);
 
+// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/2307/rhex_text_2019-07-19_15_22_31_12850/archive_2850.dat -w 2 -l 1 -d 0
+
 int main(int argc, char** argv)
 {
     std::vector<std::string> cmd_args;
     for (int i = 0; i < argc; i++)
         cmd_args.push_back(std::string(argv[i]));
-// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/2307/rhex_text_2019-07-19_15_22_31_12850/archive_2850.dat -w 2 -l 1 -d 0
 
-    std::vector<std::string>::iterator w_it = std::find(cmd_args.begin(), cmd_args.end(), "-w");
-    std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l");
-    std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c");
-    std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n");
-    std::vector<std::string>::iterator dt_it = std::find(cmd_args.begin(), cmd_args.end(), "-d");
+    std::vector<std::string>::iterator w_it = std::find(cmd_args.begin(), cmd_args.end(), "-w"); // selected world
+    std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l"); // legs to align with damages
+    std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c"); // explicit control parameters to test
+    std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n"); // no iterations
+    std::vector<std::string>::iterator dt_it = std::find(cmd_args.begin(), cmd_args.end(), "-d"); // damage types
+    std::vector<std::string>::iterator m_it = std::find(cmd_args.begin(), cmd_args.end(), "-m"); // selected model
 
     std::vector<int> brokenleg;
     std::vector<int> damagetype;
 
     if (legs_it != cmd_args.end()) {
-//        std::vector<std::string>::iterator end_it = (legs_it < ctrl_it) ? ctrl_it : cmd_args.end();
-//        end_it = (end_it < n_it || n_it < legs_it) ? end_it : n_it;
 
         std::vector<std::string>::iterator end_it = dt_it;
 
@@ -295,12 +297,41 @@ int main(int argc, char** argv)
 //    }
 //    std::cout<<std::endl;
 
+
+    if (m_it != cmd_args.end())
+        global::_model_option = atoi((m_it + 1)->c_str());
+    else
+        global::_model_option = 0;
+
+    if (w_it != cmd_args.end())
+        global::_world_option = atoi((w_it + 1)->c_str());
+    else
+        global::_world_option = 0;
+
+    if (f_it != cmd_args.end())
+        global::_friction = atoi((f_it + 1)->c_str());
+    else
+        global::_friction = 1.0;
+
+
+    std::cout<< "world option: " << global::_world_option;
     std::cout << "loading model" << std::endl;
-    init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel", global::brokenLegs);
+
+    switch(global::_model_option) {
+        case 0:
+            std::cout << "normal model" << std::endl;
+            init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised.skel", global::brokenLegs);
+            break;
+        case 1:
+            std::cout << "loose hind leg model" << std::endl;
+            init_simu(std::string(std::getenv("RESIBOTS_DIR")) + "/share/rhex_models/SKEL/raised_loosehind.skel", global::brokenLegs);
+            break;
+    }
+
     std::cout << "loaded model" << std::endl;
 
     if (ctrl_it != cmd_args.end()) {
-        std::vector<std::string>::iterator end_it = ctrl_it + 31;
+        std::vector<std::string>::iterator end_it = ctrl_it + 24;
 
         std::vector<double> ctrl;
         for (std::vector<std::string>::iterator ii = ctrl_it + 1; ii != end_it; ii++) {
@@ -336,11 +367,6 @@ int main(int argc, char** argv)
         Params::stop_maxiterations::set_iterations(atoi((n_it + 1)->c_str()));
     else
         Params::stop_maxiterations::set_iterations(10);
-
-    if (w_it != cmd_args.end())
-        global::_world_option = atoi((w_it + 1)->c_str());
-    else
-        global::_world_option = 0;
 
     typedef kernel::MaternFiveHalves<Params> Kernel_t;
     typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
