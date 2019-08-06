@@ -11,7 +11,7 @@
 #include <rhex_dart/rhex_dart_simu.hpp>
 
 using namespace limbo;
-//
+
 struct Params {
     struct bayes_opt_boptimizer : public defaults::bayes_opt_boptimizer {
     };
@@ -252,6 +252,7 @@ int main(int argc, char** argv)
         cmd_args.push_back(std::string(argv[i]));
 
     std::vector<std::string>::iterator w_it = std::find(cmd_args.begin(), cmd_args.end(), "-w"); // selected world
+    std::vector<std::string>::iterator f_it = std::find(cmd_args.begin(), cmd_args.end(), "-f"); // selected friction coefficient
     std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l"); // legs to align with damages
     std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c"); // explicit control parameters to test
     std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n"); // no iterations
