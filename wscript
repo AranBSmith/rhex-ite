@@ -47,3 +47,11 @@ def build(bld):
                           cxxflags = cxxflags,
                           variants = ['SIMU'])
 
+    limbo.create_variants(bld,
+                          source = 'rhex_tune.cpp',
+                          uselib_local = 'limbo',
+                          uselib = rhex_libs,
+                          includes=". ../../src ../ ./include",
+                          cxxflags = cxxflags,
+                          variants = ['SIMU'])
+
