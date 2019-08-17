@@ -30,19 +30,18 @@ struct Params {
     };
 
     struct kernel_maternfivehalves : public defaults::kernel_maternfivehalves {
-        BO_PARAM(double, l, 0.4);
+        BO_PARAM(double, l, 0.37);
     };
 
     struct stop_maxiterations {
         BO_DYN_PARAM(int, iterations);
     };
 
-    struct stop_maxpredictedvalue : public defaults::stop_maxpredictedvalue {
-        BO_PARAM(double, ratio, 0.9);
+    struct stop_maxpredictedarchivevalue : public defaults::stop_maxpredictedarchivevalue {
     };
 
     struct acqui_ucb : public defaults::acqui_ucb {
-        BO_PARAM(double, alpha, 0.2);
+        BO_PARAM(double, alpha, 0.43);
     };
 
     struct archiveparams {
@@ -383,7 +382,7 @@ int main(int argc, char** argv)
 
     typedef kernel::MaternFiveHalves<Params> Kernel_t;
     typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
-    typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedValue<Params>> Stop_t;
+    typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedArchiveValue<Params>> Stop_t;
     typedef mean::MeanArchive<Params> Mean_t;
     typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
             stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
@@ -402,6 +401,5 @@ int main(int argc, char** argv)
     if (global::global_robot)
         global::global_robot.reset();
 
-    std::cout << Params::acqui_ucb::alpha() << std::endl;
     return 0;
 }

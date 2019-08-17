@@ -33,8 +33,7 @@ struct Params {
         BO_DYN_PARAM(int, iterations);
     };
 
-    struct stop_maxpredictedvalue : public defaults::stop_maxpredictedvalue {
-        BO_PARAM(double, ratio, 0.9);
+    struct stop_maxpredictedarchivevalue : public defaults::stop_maxpredictedarchivevalue {
     };
 
     struct acqui_ucb : public defaults::acqui_ucb {
@@ -54,9 +53,9 @@ struct Params {
             {
                 assert(lhs.size() == 6 && rhs.size() == 6);
                 int i = 0;
-                while (i < 5 && std::round(lhs[i] * 4) == std::round(rhs[i] * 4)) //lhs[i]==rhs[i])
+                while (i < 5 && lhs[i] == rhs[i])
                     i++;
-                return std::round(lhs[i] * 4) < std::round(rhs[i] * 4); //lhs[i]<rhs[i];
+                return lhs[i] < rhs[i];
             }
         };
         typedef std::map<std::vector<double>, elem_archive, classcomp> archive_t;
@@ -96,12 +95,12 @@ struct HPParams {
 
     // we use 10 random samples to initialize the algorithm
     struct init_randomsampling {
-        BO_PARAM(int, samples, 1);
+        BO_PARAM(int, samples, 10);
     };
 
     // we stop after 40 iterations
     struct stop_maxiterations {
-        BO_PARAM(int, iterations, 1);
+        BO_PARAM(int, iterations, 10);
     };
 
     // we use the default parameters for acqui_ucb
@@ -119,6 +118,7 @@ namespace global {
     std::vector<int> brokenLegs;
     std::vector<int> damageType;
     std::vector<rhex_dart::RhexDamage> damages;
+    int num_trials;
 } // namespace global
 
 struct Eval {
@@ -128,27 +128,12 @@ struct Eval {
     // the function to be optimized
     Eigen::VectorXd operator()(const Eigen::VectorXd& x) const
     {
+        global::num_trials += 1;
         std::vector<double> key(x.size(), 0);
         Eigen::VectorXd::Map(key.data(), key.size()) = x;
 
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
         float fit = Params::archiveparams::archive.at(key).fit;
-
-        std::cout << "Key: " << std::endl;
-
-        for (size_t i = 0; i < key.size(); ++i)
-            std::cout << key[i] << " " ;
-        std::cout << std::endl;
-
-        std::cout << "Fitness: " << fit << std::endl;
-
-        std::cout << "Using control parameters: ";
-        for(size_t i = 0; i < ctrl.size(); ++i)
-        {
-            std::cout << ctrl[i] << " ";
-        }
-        std::cout << std::endl;
-
         rhex_dart::RhexDARTSimu<> simu(ctrl, global::global_robot->clone(), global::_world_option, global::_friction, global::damages);
         simu.run(5);
         return tools::make_vector(simu.covered_distance());
@@ -158,25 +143,24 @@ struct Eval {
 // evaluate hyperparameter selection
 struct EvalHP {
     BO_PARAM(size_t, dim_in, 2);
-    BO_PARAM(size_t, dim_out, 1);
+    BO_PARAM(size_t, dim_out, 2);
 
     // the function to be optimized
     Eigen::VectorXd operator()(const Eigen::VectorXd& x) const
     {
+        global::num_trials = 0;
         // be able to adjust alpha
         double opt_alpha = x[0];
         double opt_l = x[1];
-        std::cout << "Received alpha: " << opt_alpha << std::endl;
-        std::cout << "Received l: " << opt_l << std::endl;
 
         Params::acqui_ucb::set_alpha(opt_alpha);
         Params::kernel_maternfivehalves::set_l(opt_l);
 
-        std::cout << Params::acqui_ucb::alpha() << std::endl;
+        //std::cout << Params::acqui_ucb::alpha() << std::endl;
 
         typedef kernel::MaternFiveHalves<Params> Kernel_t;
         typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
-        typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedValue<Params>> Stop_t;
+        typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedArchiveValue<Params>> Stop_t;
         typedef mean::MeanArchive<Params> Mean_t;
         typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
                 stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
@@ -190,9 +174,14 @@ struct EvalHP {
         auto val = opt.best_observation();
         Eigen::VectorXd result = opt.best_sample().transpose();
 
-        std::cout << val << " res  " << result.transpose() << std::endl;
+        double trials = 10.0 - global::num_trials;
+        auto vec = Eigen::VectorXd(2);
+        vec[0] = val[0];
+        vec[1] = trials;
 
-        return val;
+        std::cout<<"this is the value: " << vec.transpose() << std::endl;
+
+        return vec;
     }
 
 };
@@ -338,6 +327,7 @@ BO_DECLARE_DYN_PARAM(double, Params::acqui_ucb, alpha);
 BO_DECLARE_DYN_PARAM(double, Params::kernel_maternfivehalves, l);
 
 // ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/2307/rhex_text_2019-07-19_15_22_31_12850/archive_2850.dat -w 2 -l 1 -d 0
+ // ./waf && ./waf --exp rhex-ite && ./build/exp/rhex-ite/rhex_tune_simu ~/itev2/map_stats/dcf0608/rhex_text_2019-08-08_09_37_38_32558/archive_3600.dat -w 0 -l 1 -d 0
 
 int main(int argc, char** argv)
 {
@@ -451,26 +441,17 @@ int main(int argc, char** argv)
     else
         Params::stop_maxiterations::set_iterations(10);
 
-//    typedef kernel::MaternFiveHalves<HPParams> HPKernel_t;
-//    // typedef opt::ExhaustiveSearchArchive<HPParams> HPInnerOpt_t;
-//    typedef boost::fusion::vector<stop::MaxIterations<HPParams>> HPStop_t;
-//    //typedef mean::MeanArchive<HPParams> HPMean_t;
-//    typedef boost::fusion::vector<stat::Samples<HPParams>, stat::BestObservations<HPParams>,
-//            stat::ConsoleSummary<HPParams>, stat::AggregatedObservations<HPParams>, stat::BestAggregatedObservations<HPParams>,
-//            stat::Observations<HPParams>, stat::BestSamples<HPParams>> HPStat_t;
-//    typedef init::NoInit<HPParams> HPInit_t;
-//    typedef model::GP<HPParams, HPKernel_t, HPMean_t> HPGP_t;
-//    typedef acqui::UCB<HPParams, HPGP_t> HPAcqui_t;
-
     // bayes_opt::BOptimizer<Params, modelfun<HPGP_t>, initfun<HPInit_t>, acquifun<HPAcqui_t>, acquiopt<HPInnerOpt_t>, statsfun<HPStat_t>, stopcrit<HPStop_t>> HPopt;
     // bayes_opt::BOptimizer<HPParams, modelfun<HPGP_t>, initfun<HPInit_t>, acquifun<HPAcqui_t>, statsfun<HPStat_t>, stopcrit<HPStop_t>> HPopt;
-    bayes_opt::BOptimizer<HPParams> HPopt;
 
+    global::num_trials = 0;
+
+    bayes_opt::BOptimizer<HPParams> HPopt;
     HPopt.optimize(EvalHP());
     auto HPval = HPopt.best_observation();
     Eigen::VectorXd HPresult = HPopt.best_sample().transpose();
 
-    std::cout << HPval << " res  " << HPresult.transpose() << std::endl;
+    std::cout << "max covered distance overall: " << HPval << " with result:  " << HPresult.transpose() << std::endl;
 
     return 0;
 }
