@@ -269,7 +269,7 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
 Params::archiveparams::archive_t Params::archiveparams::archive;
 BO_DECLARE_DYN_PARAM(int, Params::stop_maxiterations, iterations);
 
-// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/dcf0608/2/archive_3600.dat -w 2 -l 1 -d 0
+// ./waf --exp rhex-ite && ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/dcf0608/2/archive_3600.dat -w 2 -l 1 -d 0
 
 int main(int argc, char** argv)
 {
