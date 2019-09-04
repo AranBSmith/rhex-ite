@@ -12,6 +12,8 @@
 
 using namespace limbo;
 
+// this file runs a single ITE experiment
+
 struct Params {
     struct bayes_opt_boptimizer : public defaults::bayes_opt_boptimizer {
     };
@@ -30,18 +32,19 @@ struct Params {
     };
 
     struct kernel_maternfivehalves : public defaults::kernel_maternfivehalves {
-        BO_PARAM(double, l, 0.37);
+        BO_PARAM(double, l, 0.3650945362155687);
     };
 
     struct stop_maxiterations {
         BO_DYN_PARAM(int, iterations);
     };
 
-    struct stop_maxpredictedarchivevalue : public defaults::stop_maxpredictedarchivevalue {
+    // using a default 90% above all other predicted gait performances in the map
+    struct stop_maxpredictedvalue : public defaults::stop_maxpredictedvalue {
     };
 
     struct acqui_ucb : public defaults::acqui_ucb {
-        BO_PARAM(double, alpha, 0.43);
+        BO_PARAM(double, alpha, 0.42291988898203603);
     };
 
     struct archiveparams {
@@ -91,7 +94,7 @@ struct Eval {
         std::vector<double> ctrl = Params::archiveparams::archive.at(key).controller;
 
         float fit = Params::archiveparams::archive.at(key).fit;
-        std::cout << "Fitness: " << fit << std::endl;
+        // std::cout << "Fitness: " << fit << std::endl;
 
         std::cout << "Using control parameters: ";
         for(size_t i = 0; i < ctrl.size(); ++i)
@@ -266,7 +269,7 @@ std::map<std::vector<double>, Params::archiveparams::elem_archive, Params::archi
 Params::archiveparams::archive_t Params::archiveparams::archive;
 BO_DECLARE_DYN_PARAM(int, Params::stop_maxiterations, iterations);
 
-// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/2307/rhex_text_2019-07-19_15_22_31_12850/archive_2850.dat -w 2 -l 1 -d 0
+// ./build/exp/rhex-ite/rhex_graphic ~/itev2/map_stats/dcf0608/2/archive_3600.dat -w 2 -l 1 -d 0
 
 int main(int argc, char** argv)
 {
@@ -278,7 +281,7 @@ int main(int argc, char** argv)
     std::vector<std::string>::iterator f_it = std::find(cmd_args.begin(), cmd_args.end(), "-f"); // selected friction coefficient
     std::vector<std::string>::iterator legs_it = std::find(cmd_args.begin(), cmd_args.end(), "-l"); // legs to align with damages
     std::vector<std::string>::iterator ctrl_it = std::find(cmd_args.begin(), cmd_args.end(), "-c"); // explicit control parameters to test
-    std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n"); // no iterations
+    std::vector<std::string>::iterator n_it = std::find(cmd_args.begin(), cmd_args.end(), "-n"); // no. iterations
     std::vector<std::string>::iterator dt_it = std::find(cmd_args.begin(), cmd_args.end(), "-d"); // damage types
     std::vector<std::string>::iterator m_it = std::find(cmd_args.begin(), cmd_args.end(), "-m"); // selected model
 
@@ -382,8 +385,9 @@ int main(int argc, char** argv)
 
     typedef kernel::MaternFiveHalves<Params> Kernel_t;
     typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
-    typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedArchiveValue<Params>> Stop_t;
+    typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedValue<Params>> Stop_t;
     typedef mean::MeanArchive<Params> Mean_t;
+    // here, GPArchive, a custom module, writes the maps after each iteration
     typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
             stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
             stat::Observations<Params>, stat::BestSamples<Params>, stat::GPArchive<Params>> Stat_t;

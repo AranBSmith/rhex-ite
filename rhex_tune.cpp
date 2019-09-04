@@ -12,6 +12,9 @@
 
 using namespace limbo;
 
+// this file runs multiple ITE experiments and tries to optimize the UCB alpha value,
+// and the kernel length value to minimize the number of trials required
+
 struct Params {
     struct bayes_opt_boptimizer : public defaults::bayes_opt_boptimizer {
     };
@@ -63,7 +66,7 @@ struct Params {
     };
 };
 
-
+// parameters to tune the experiments alpha and length values
 struct HPParams {
     struct bayes_opt_boptimizer : public defaults::bayes_opt_boptimizer {
     };
@@ -156,20 +159,15 @@ struct EvalHP {
         Params::acqui_ucb::set_alpha(opt_alpha);
         Params::kernel_maternfivehalves::set_l(opt_l);
 
-        //std::cout << Params::acqui_ucb::alpha() << std::endl;
-
         typedef kernel::MaternFiveHalves<Params> Kernel_t;
         typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
         typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedArchiveValue<Params>> Stop_t;
         typedef mean::MeanArchive<Params> Mean_t;
-        typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
-                stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
-                stat::Observations<Params>, stat::BestSamples<Params>> Stat_t;
         typedef init::NoInit<Params> Init_t;
         typedef model::GP<Params, Kernel_t, Mean_t> GP_t;
         typedef acqui::UCB<Params, GP_t> Acqui_t;
 
-        bayes_opt::BOptimizer<Params, modelfun<GP_t>, initfun<Init_t>, acquifun<Acqui_t>, acquiopt<InnerOpt_t>, statsfun<Stat_t>, stopcrit<Stop_t>> opt;
+        bayes_opt::BOptimizer<Params, modelfun<GP_t>, initfun<Init_t>, acquifun<Acqui_t>, acquiopt<InnerOpt_t>, stopcrit<Stop_t>> opt;
         opt.optimize(Eval());
         auto val = opt.best_observation();
         Eigen::VectorXd result = opt.best_sample().transpose();
@@ -440,9 +438,6 @@ int main(int argc, char** argv)
         Params::stop_maxiterations::set_iterations(atoi((n_it + 1)->c_str()));
     else
         Params::stop_maxiterations::set_iterations(10);
-
-    // bayes_opt::BOptimizer<Params, modelfun<HPGP_t>, initfun<HPInit_t>, acquifun<HPAcqui_t>, acquiopt<HPInnerOpt_t>, statsfun<HPStat_t>, stopcrit<HPStop_t>> HPopt;
-    // bayes_opt::BOptimizer<HPParams, modelfun<HPGP_t>, initfun<HPInit_t>, acquifun<HPAcqui_t>, statsfun<HPStat_t>, stopcrit<HPStop_t>> HPopt;
 
     global::num_trials = 0;
 
