@@ -36,7 +36,7 @@ struct Params {
         BO_DYN_PARAM(int, iterations);
     };
 
-    struct stop_maxpredictedarchivevalue : public defaults::stop_maxpredictedarchivevalue {
+    struct stop_maxpredictedvalue : public defaults::stop_maxpredictedvalue {
     };
 
     struct acqui_ucb : public defaults::acqui_ucb {
@@ -161,7 +161,7 @@ struct EvalHP {
 
         typedef kernel::MaternFiveHalves<Params> Kernel_t;
         typedef opt::ExhaustiveSearchArchive<Params> InnerOpt_t;
-        typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedArchiveValue<Params>> Stop_t;
+        typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedValue<Params>> Stop_t;
         typedef mean::MeanArchive<Params> Mean_t;
         typedef init::NoInit<Params> Init_t;
         typedef model::GP<Params, Kernel_t, Mean_t> GP_t;

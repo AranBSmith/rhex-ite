@@ -388,9 +388,15 @@ int main(int argc, char** argv)
     typedef boost::fusion::vector<stop::MaxIterations<Params>, stop::MaxPredictedValue<Params>> Stop_t;
     typedef mean::MeanArchive<Params> Mean_t;
     // here, GPArchive, a custom module, writes the maps after each iteration
+//    typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
+//            stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
+//            stat::Observations<Params>, stat::BestSamples<Params>, stat::GPArchive<Params>> Stat_t;
+
+    // without the gparchive stats module in case you have not installed it.
     typedef boost::fusion::vector<stat::Samples<Params>, stat::BestObservations<Params>,
             stat::ConsoleSummary<Params>, stat::AggregatedObservations<Params>, stat::BestAggregatedObservations<Params>,
-            stat::Observations<Params>, stat::BestSamples<Params>, stat::GPArchive<Params>> Stat_t;
+            stat::Observations<Params>, stat::BestSamples<Params>> Stat_t;
+
     typedef init::NoInit<Params> Init_t;
     typedef model::GP<Params, Kernel_t, Mean_t> GP_t;
     typedef acqui::UCB<Params, GP_t> Acqui_t;
