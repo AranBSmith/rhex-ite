@@ -104,13 +104,16 @@ sudo apt-get install libtbb-dev
     - `./build/exp/rhex-ite/rhex_simu path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]`
     - `./build/exp/rhex-ite/rhex_graphic path_to_archive [-l id_of_to_be_removed] [-n number_of_BO_iterations]` for the graphics version
     - the ids of the legs are zero-based; i.e., they span from 0 to 5
-    - the arguments parser is not very sophisticated
-    - e.g. `./build/exp/rhex-ite/rhex_simu ~/itev2/map_stats/bo0208/1/archive_3000.dat -w 0 -l 1 -d -1` tests in flat terrain, with no damage.
-    - other options also exist e.g. `./build/exp/rhex-ite/rhex_simu ~/itev2/map_stats/bo0208/1/archive_3000.dat -f 0.45 -w 1 -l 1 -d -1` tests with a friction coefficient of .45, and in world 1 (sand dune). 
-    - e.g. `./build/exp/rhex-ite/rhex_simu ~/itev2/map_stats/bo0208/1/archive_3000.dat -w 0 -l 0 4 -d 0 0` : middle right leg and left hind leg removed
-    - e.g. `./build/exp/rhex-ite/rhex_simu ~/itev2/map_stats/bo0208/1/archive_3000.dat -m 1 -w 0 -l 1 -d -1` : choose model with flag `-m 1`, specifying a model with a hind leg that has a weaker spring coefficient.
+    - **the arguments parser is not very sophisticated**, here are some examples as a guide.
+    - e.g. `./build/exp/rhex-ite/rhex_simu exp/rhex-ite/archives/archive_3600.dat -w 0 -l 1 -d -1` tests in flat terrain, with no damage -l 1 -d -1 indicates no damage for leg 1, or any other leg, however must be specified this way for the no damage case.
+    - other options also exist e.g. `./build/exp/rhex-ite/rhex_simu exp/rhex-ite/archives/archive_3600.dat -f 0.45 -w 1 -l 1 -d -1` tests with a friction coefficient of .45, and in world 1 (sand dune). 
+    - e.g. `./build/exp/rhex-ite/rhex_simu exp/rhex-ite/archives/archive_3600.dat -w 0 -l 0 4 -d 0 0` : middle right leg and left hind leg removed
+    - e.g. `./build/exp/rhex-ite/rhex_simu exp/rhex-ite/archives/archive_3600.dat -m 1 -w 0 -l 1 -d -1` : choose model with flag `-m 1`, specifying a model with a hind leg that has a weaker spring coefficient.
+    - e.g. `./build/exp/rhex-ite/rhex_simu exp/rhex-ite/archives/archive_3600.dat -w 0 -n 1 -c 1 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0 0.5 0 0.5 -l 1 -d -1` : tests the tripod gait with just one iteration, and no damage.
+    - e.g. `./build/exp/rhex-ite/rhex_graphic exp/rhex-ite/archives/archive_3600.dat -f 0.45 -m 1 -w 0 -n 1 -c 1 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0 0.5 0 0.5 -l 1 -d 0` : command with all flags in action.
+    - Possible flags are: -f (friction) -m (model) -w (world) -n (iterations) -c (control parameters) -l (leg id) -d (damage id)
+    - Finally, when you specify the -c flag, the archive argument will neglected, and only the control parameters will be used.
     - The experiments ran in this work can be found in the testbo.sh and testdynfbc.sh files.
-- Some **already generated archives** (to save you time) are in the `archives` folder. You can use [MAP-Elites-Rhex](https://github.com/AranBSmith/MAP-Elites-Rhex) to generate new ones.
 
 ## LICENSE
 
