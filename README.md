@@ -114,7 +114,6 @@ sudo apt-get install libtbb-dev
     - Possible flags are: -f (friction) -m (model) -w (world) -n (iterations) -c (control parameters) -l (leg id) -d (damage id)
     - Finally, when you specify the -c flag, the archive argument will neglected, and only the control parameters will be used.
     - The experiments ran in this work can be found in the testbo.sh and testdynfbc.sh files.
-- Some **already generated archives** (to save you time) are in the `archives` folder. You can use [MAP-Elites-Rhex](https://github.com/AranBSmith/MAP-Elites-Rhex) to generate new ones.
 
 ## LICENSE
 
